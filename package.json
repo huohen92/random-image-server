@@ -1,6 +1,6 @@
 {
   "name": "random-image-server",
-  "version": "0.02",
+  "version": "0.04",
   "description": "Random image server with adaptive UI and upload",
   "main": "app.js",
   "dependencies": {
