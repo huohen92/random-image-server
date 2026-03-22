@@ -5,12 +5,15 @@ const multer = require('multer');
 const app = express();
 const port = 5566;
 
-const VERSION = '0.04';
+const VERSION = '0.06';  // 版本号，可自行修改
 
 const SUPPORTED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.ico'];
 
-// 静态文件服务
+// 静态文件服务：根路径访问 public 目录
 app.use(express.static('public'));
+// 额外支持 /public 前缀，方便旧习惯
+app.use('/public', express.static('public'));
+
 app.use(express.urlencoded({ extended: true }));
 
 // ---------- 文件上传配置 ----------
@@ -47,7 +50,7 @@ const upload = multer({
     if (SUPPORTED_EXT.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error(`Unsupported format. Allowed: ${SUPPORTED_EXT.join(', ')}`));
+      cb(new Error(`不支持的格式。允许的格式: ${SUPPORTED_EXT.join(', ')}`));
     }
   },
   limits: { fileSize: 10 * 1024 * 1024 }
@@ -62,13 +65,13 @@ function getRandomImagePath(subdir, callback) {
       const ext = path.extname(file).toLowerCase();
       return SUPPORTED_EXT.includes(ext);
     });
-    if (!images.length) return callback(new Error(`No images in ${subdir}`));
+    if (!images.length) return callback(new Error(`${subdir} 目录中没有图片`));
     const random = images[Math.floor(Math.random() * images.length)];
     callback(null, path.join(dirPath, random));
   });
 }
 
-// ---------- 路由 ----------
+// ---------- 根路径：中文使用指南 ----------
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -76,7 +79,7 @@ app.get('/', (req, res) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Random Image Server v${VERSION}</title>
+        <title>随机图片服务 v${VERSION}</title>
         <style>
             body { font-family: Arial; margin: 20px; background: #f0f0f0; }
             .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
@@ -87,47 +90,51 @@ app.get('/', (req, res) => {
     </head>
     <body>
         <div class="container">
-            <h1>📸 Random Image Server v${VERSION}</h1>
+            <h1>📸 随机图片服务 v${VERSION}</h1>
             <ul>
-                <li><code>/random</code> or <code>/img</code> – Adaptive UI page</li>
-                <li><code>/h</code> – Random PC image (original)</li>
-                <li><code>/v</code> – Random mobile image (original)</li>
-                <li><code>/api/random</code> – Auto image API (use ?type=pc or ?type=mobile)</li>
-                <li><code>/upload</code> – Upload images via web</li>
-                <li><code>/api/upload</code> – Upload API</li>
-                <li><code>public/</code> – Static files (e.g., /index.html)</li>
+                <li><code>/random</code> 或 <code>/img</code> – 自适应展示页面</li>
+                <li><code>/h</code> – PC 尺寸随机图片（原始）</li>
+                <li><code>/v</code> – 移动端尺寸随机图片（原始）</li>
+                <li><code>/api/random</code> – 自动选择图片 API（使用 ?type=pc 或 ?type=mobile）</li>
+                <li><code>/upload</code> – 网页上传图片</li>
+                <li><code>/api/upload</code> – 上传 API</li>
+                <li><code>public/</code> – 静态文件（例如 /index.html 或 /public/index.html）</li>
             </ul>
-            <p>Place images in <code>images/h/</code> (PC) and <code>images/v/</code> (mobile).</p>
+            <p>请将图片放入 <code>images/h/</code>（PC）和 <code>images/v/</code>（移动端）目录。</p>
+            <p>静态文件请放入 <code>public/</code> 目录，可通过 <code>/文件名</code> 或 <code>/public/文件名</code> 访问。</p>
         </div>
     </body>
     </html>
   `);
 });
 
+// ---------- 路由：PC 图片 ----------
 app.get('/h', (req, res) => {
   getRandomImagePath('h', (err, filePath) => {
-    if (err) return res.status(404).send('No images in /h');
+    if (err) return res.status(404).send('PC 目录中没有图片');
     res.sendFile(filePath);
   });
 });
 
+// ---------- 路由：移动端图片 ----------
 app.get('/v', (req, res) => {
   getRandomImagePath('v', (err, filePath) => {
-    if (err) return res.status(404).send('No images in /v');
+    if (err) return res.status(404).send('移动端目录中没有图片');
     res.sendFile(filePath);
   });
 });
 
+// ---------- API：自动选择图片 ----------
 app.get('/api/random', (req, res) => {
   const type = req.query.type;
   if (type === 'pc') {
     getRandomImagePath('h', (err, filePath) => {
-      if (err) return res.status(404).send('No images');
+      if (err) return res.status(404).send('没有图片');
       res.sendFile(filePath);
     });
   } else if (type === 'mobile') {
     getRandomImagePath('v', (err, filePath) => {
-      if (err) return res.status(404).send('No images');
+      if (err) return res.status(404).send('没有图片');
       res.sendFile(filePath);
     });
   } else {
@@ -135,20 +142,20 @@ app.get('/api/random', (req, res) => {
     const isMobile = /mobile|android|iphone|ipad|phone/i.test(ua);
     const subdir = isMobile ? 'v' : 'h';
     getRandomImagePath(subdir, (err, filePath) => {
-      if (err) return res.status(404).send('No images');
+      if (err) return res.status(404).send('没有图片');
       res.sendFile(filePath);
     });
   }
 });
 
-// 自适应页面
+// ---------- 自适应展示页面（中文）----------
 app.get('/random', (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Random Image</title>
+        <title>随机图片</title>
         <style>
             body { text-align: center; font-family: Arial; padding: 20px; background: #f5f5f5; }
             .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
@@ -158,19 +165,19 @@ app.get('/random', (req, res) => {
     </head>
     <body>
         <div class="container">
-            <h1>Random Image</h1>
-            <img id="img" src="/h" alt="random image" onerror="handleError()">
-            <br><button onclick="refresh()">Refresh</button>
+            <h1>随机图片</h1>
+            <img id="img" src="/h" alt="随机图片" onerror="handleError()">
+            <br><button onclick="refresh()">换一张</button>
             <p id="info"></p>
         </div>
         <script>
             function refresh() {
                 const endpoint = window.innerWidth <= 768 ? '/v' : '/h';
                 document.getElementById('img').src = endpoint + '?t=' + Date.now();
-                document.getElementById('info').innerText = 'Using: ' + (endpoint === '/v' ? 'mobile' : 'PC');
+                document.getElementById('info').innerText = '当前使用：' + (endpoint === '/v' ? '移动端图片' : 'PC端图片');
             }
             function handleError() {
-                document.getElementById('info').innerText = 'No images found. Please upload some.';
+                document.getElementById('info').innerText = '未找到图片，请先上传。';
             }
             window.onload = refresh;
             window.onresize = refresh;
@@ -181,7 +188,7 @@ app.get('/random', (req, res) => {
 });
 app.get('/img', (req, res) => res.redirect('/random'));
 
-// 上传页面
+// ---------- 上传页面（中文）----------
 app.get('/upload', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -189,7 +196,7 @@ app.get('/upload', (req, res) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Upload Image</title>
+        <title>上传图片</title>
         <style>
             body { font-family: Arial; margin: 20px; background: #f5f5f5; }
             .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
@@ -199,14 +206,14 @@ app.get('/upload', (req, res) => {
     </head>
     <body>
         <div class="container">
-            <h1>Upload Image</h1>
+            <h1>上传图片</h1>
             <form id="form" enctype="multipart/form-data">
                 <select name="type">
-                    <option value="pc">PC (h)</option>
-                    <option value="mobile">Mobile (v)</option>
+                    <option value="pc">PC 尺寸 (h)</option>
+                    <option value="mobile">移动端尺寸 (v)</option>
                 </select>
                 <input type="file" name="image" accept="image/*" required>
-                <button type="submit">Upload</button>
+                <button type="submit">上传</button>
             </form>
             <div id="msg"></div>
         </div>
@@ -217,7 +224,7 @@ app.get('/upload', (req, res) => {
                 const res = await fetch('/api/upload', { method: 'POST', body: fd });
                 const data = await res.json();
                 const msg = document.getElementById('msg');
-                msg.innerText = res.ok ? 'Uploaded: ' + data.filename : 'Error: ' + data.error;
+                msg.innerText = res.ok ? '上传成功: ' + data.filename : '错误: ' + data.error;
                 msg.style.color = res.ok ? 'green' : 'red';
                 if (res.ok) e.target.reset();
             };
@@ -227,12 +234,13 @@ app.get('/upload', (req, res) => {
   `);
 });
 
+// ---------- 上传 API ----------
 app.post('/api/upload', upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file' });
+  if (!req.file) return res.status(400).json({ error: '未选择文件' });
   res.json({ success: true, filename: req.file.filename });
 });
 
-// 错误处理
+// 错误处理中间件
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ error: err.message });
@@ -242,6 +250,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port} (v${VERSION})`);
-  console.log(`Supported formats: ${SUPPORTED_EXT.join(', ')}`);
+  console.log(`服务运行在 http://localhost:${port} (v${VERSION})`);
+  console.log(`支持的格式: ${SUPPORTED_EXT.join(', ')}`);
 });
