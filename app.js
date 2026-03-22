@@ -5,7 +5,7 @@ const multer = require('multer');
 const app = express();
 const port = 5566;
 
-const VERSION = '0.01';
+const VERSION = '0.02';
 
 const SUPPORTED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.ico'];
 
