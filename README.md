@@ -85,19 +85,8 @@ docker-compose up -d
 
 ---
 
-## 四、上传图片
-
-### 网页上传
-
-访问：http://<IP>:5566/upload
-
-### 命令行上传
-
-```bash
-curl -F "type=pc" -F "image=@photo.jpg" http://localhost:5566/api/upload
-curl -F "type=mobile" -F "image=@photo.jpg" http://localhost:5566/api/upload
-```
-
+## 四、图片
+自行配置到文件v，h中
 ---
 
 ## 五、访问地址
@@ -107,7 +96,6 @@ curl -F "type=mobile" -F "image=@photo.jpg" http://localhost:5566/api/upload
 - /h ：PC 随机图
 - /v ：移动端随机图
 - /api/random ：API
-- /upload ：上传界面
 - /xxx.html ：public 静态文件
 
 ---
