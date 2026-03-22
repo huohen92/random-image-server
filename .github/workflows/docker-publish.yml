@@ -3,13 +3,15 @@ name: Build and Push Docker Image
 on:
   push:
     branches: [ main ]
+  release:
+    types: [published]          # 当 Release 发布时触发
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 强制使用 Node.js 24
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,4 +32,4 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/random-image-server:latest
-            ${{ secrets.DOCKER_USERNAME }}/random-image-server:v0.01
+            ${{ secrets.DOCKER_USERNAME }}/random-image-server:${{ github.event.release.tag_name }}
