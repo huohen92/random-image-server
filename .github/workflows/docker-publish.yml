@@ -2,8 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ main ]    # 当推送到 main 分支时触发
-  workflow_dispatch:      # 支持手动触发
+    branches: [ main ]          # 改为您的默认分支
+  workflow_dispatch:
 
 jobs:
   build:
