@@ -2,16 +2,17 @@ FROM node:14-alpine
 
 WORKDIR /app
 
-# 复制依赖清单
+# 复制依赖文件
 COPY package*.json ./
 
-# 安装生产依赖（包括 express 和 multer）
-RUN npm install --production
+# 安装生产依赖（使用国内镜像提高稳定性）
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install --production
 
 # 复制应用代码
 COPY app.js .
 
-# 创建必要目录（镜像中占位，实际数据由挂载卷提供）
+# 创建必要目录（容器启动时占位）
 RUN mkdir -p images/h images/v public
 
 EXPOSE 5566
