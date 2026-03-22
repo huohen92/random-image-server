@@ -5,7 +5,7 @@ const multer = require('multer');
 const app = express();
 const port = 5566;
 
-const VERSION = '0.06';  // 版本号，可自行修改
+const VERSION = '0.02';  // 版本号，可自行修改
 
 const SUPPORTED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.ico'];
 
