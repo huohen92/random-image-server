@@ -1,0 +1,10 @@
+services:
+  random-image:
+    build: .
+    container_name: random-image
+    ports:
+      - "5566:5566"
+    volumes:
+      - ./images:/app/images
+      - ./public:/app/public
+    restart: unless-stopped
