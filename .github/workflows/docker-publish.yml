@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   release:
-    types: [published]          # 当 Release 发布时触发
+    types: [published]
   workflow_dispatch:
 
 jobs:
