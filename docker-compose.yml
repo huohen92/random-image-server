@@ -1,6 +1,6 @@
 services:
   random-image:
-    build: .
+    image: huohen92/random-image-server:v0.02
     container_name: random-image
     ports:
       - "5566:5566"
